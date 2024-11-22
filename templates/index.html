@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial News Sentiment Analysis</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Financial News Sentiment Analysis</h1>
+        
+        <!-- Overall Sentiment Card -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Market Sentiment Overview</h2>
+            <div class="text-4xl font-bold" id="avgSentiment">...</div>
+            <div class="text-gray-600" id="sentimentLabel">Calculating...</div>
+        </div>
+        
+        <!-- News Articles -->
+        <div class="grid gap-6" id="newsContainer">
+            <!-- Articles will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        function getSentimentColor(score) {
+            if (score > 0.1) return 'text-green-600';
+            if (score < -0.1) return 'text-red-600';
+            return 'text-gray-600';
+        }
+
+        function updateNews() {
+            fetch('/api/news-sentiment')
+                .then(response => response.json())
+                .then(data => {
+                    // Update average sentiment
+                    const avgElement = document.getElementById('avgSentiment');
+                    const labelElement = document.getElementById('sentimentLabel');
+                    avgElement.textContent = data.average_sentiment;
+                    avgElement.className = getSentimentColor(data.average_sentiment);
+                    
+                    // Update sentiment label
+                    if (data.average_sentiment > 0.1) {
+                        labelElement.textContent = 'Positive Market Sentiment';
+                    } else if (data.average_sentiment < -0.1) {
+                        labelElement.textContent = 'Negative Market Sentiment';
+                    } else {
+                        labelElement.textContent = 'Neutral Market Sentiment';
+                    }
+
+                    // Update news articles
+                    const container = document.getElementById('newsContainer');
+                    container.innerHTML = data.articles.map(article => `
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-xl font-semibold">${article.title}</h3>
+                                <span class="ml-4 ${getSentimentColor(article.sentiment_score)} font-bold">
+                                    ${article.sentiment_score}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-4">${article.description}</p>
+                            <div class="flex justify-between items-center text-sm text-gray-500">
+                                <span>${article.source}</span>
+                                <a href="${article.url}" target="_blank" class="text-blue-600 hover:underline">Read More</a>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Update initially and every 5 minutes
+        updateNews();
+        setInterval(updateNews, 300000);
+    </script>
+</body>
+</html>
