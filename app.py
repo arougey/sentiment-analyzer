@@ -4,12 +4,13 @@ import requests
 import os
 from datetime import datetime
 import pandas as pd
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+load_dotenv()
 
-# You would need to get an API key from a news service
-NEWS_API_KEY = '42d887c3ac254d71b055ad4602a4a78d'
-NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything'
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+NEWS_API_ENDPOINT = os.getenv("NEWS_API_ENDPOINT")
 
 def fetch_financial_news():
     """Fetch financial news articles from NewsAPI."""
